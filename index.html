@@ -1,0 +1,2627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banquet Master v7.0 - Enterprise Edition</title>
+
+    <!-- External Libraries for v7.0 Enterprise Features -->
+    <!-- 使用国内可访问的 CDN 镜像 -->
+    <script src="https://cdn.staticfile.org/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.staticfile.org/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.staticfile.org/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="https://cdn.staticfile.org/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+    <style>
+        /* ========================================
+           BANQUET MASTER v6.0 - GOD-TIER EDITION
+           Glassmorphism + Dark Mode Support
+           ======================================== */
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        /* ========== CSS VARIABLES ========== */
+        :root {
+            /* Light Mode */
+            --bg-primary: #f5f7fa;
+            --bg-secondary: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --sidebar-bg: rgba(30, 30, 32, 0.95);
+
+            --text-primary: #1a202c;
+            --text-secondary: #718096;
+            --text-muted: #a0aec0;
+            --text-on-dark: rgba(255, 255, 255, 0.9);
+
+            --accent: #0066ff;
+            --accent-hover: #0052cc;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+
+            --border: rgba(0, 0, 0, 0.08);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.15);
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+        }
+
+        /* Dark Mode Variables */
+        body.dark-mode {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --sidebar-bg: rgba(15, 23, 42, 0.95);
+
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+
+            --border: rgba(255, 255, 255, 0.1);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* ========== RESET ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* ========== LAYOUT ========== */
+        #app {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            height: 100vh;
+        }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar {
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(50px) saturate(180%);
+            -webkit-backdrop-filter: blur(50px) saturate(180%);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-on-dark);
+            letter-spacing: -0.02em;
+        }
+
+        .brand-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+        }
+
+        .nav-group {
+            margin-bottom: 24px;
+        }
+
+        .nav-group-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(255, 255, 255, 0.4);
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
+            transform: translateX(2px);
+        }
+
+        .nav-item.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .nav-item i {
+            font-style: normal;
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Cloud Status Panel */
+        .cloud-status-panel {
+            padding: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .cloud-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        .status-dot.online {
+            background: var(--success);
+        }
+
+        .status-dot.syncing {
+            background: var(--warning);
+        }
+
+        .status-dot.offline {
+            background: var(--danger);
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.6;
+                transform: scale(1.1);
+            }
+        }
+
+        /* ========== MAIN AREA ========== */
+        .main {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            height: 64px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s ease;
+        }
+
+        body.dark-mode .theme-toggle {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px;
+        }
+
+        /* ========== COMPONENTS ========== */
+
+        /* Card with Glassmorphism */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text-primary);
+        }
+
+        body.dark-mode .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-sm {
+            padding: 7px 14px;
+            font-size: 13px;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Form Elements */
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-family: inherit;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+        }
+
+        /* ========== CALENDAR ========== */
+        .calendar {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            background: var(--glass-bg);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .calendar-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .calendar-nav button {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-nav button:hover {
+            background: var(--glass-bg);
+            transform: translateY(-1px);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+
+        .calendar-weekday {
+            padding: 12px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            background: var(--glass-bg);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .calendar-day {
+            min-height: 90px;
+            padding: 10px;
+            border-right: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day:nth-child(7n) {
+            border-right: none;
+        }
+
+        .calendar-day:hover {
+            background: var(--glass-bg);
+        }
+
+        .calendar-day.other-month {
+            background: rgba(0, 0, 0, 0.02);
+            color: var(--text-muted);
+        }
+
+        body.dark-mode .calendar-day.other-month {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .calendar-day.today {
+            background: rgba(0, 102, 255, 0.08);
+        }
+
+        .calendar-day-number {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .calendar-event {
+            font-size: 11px;
+            background: var(--accent);
+            color: white;
+            padding: 3px 7px;
+            border-radius: 5px;
+            margin-top: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ========== DASHBOARD STATS ========== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .stat-trend {
+            font-size: 12px;
+            color: var(--success);
+        }
+
+        /* Sparkline */
+        .sparkline {
+            height: 40px;
+            margin-top: 12px;
+            background: linear-gradient(90deg,
+                    var(--accent) 0%,
+                    var(--accent) 20%,
+                    rgba(0, 102, 255, 0.3) 50%,
+                    var(--accent) 80%,
+                    var(--accent) 100%);
+            background-size: 200% 100%;
+            border-radius: 4px;
+            opacity: 0.2;
+            animation: sparkline-pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes sparkline-pulse {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        /* ========== MENU VIEW ========== */
+        .menu-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        .menu-section {
+            margin-bottom: 32px;
+        }
+
+        .menu-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .menu-section-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-secondary);
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .menu-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            user-select: none;
+        }
+
+        .menu-card:hover {
+            border-color: var(--accent);
+            box-shadow: var(--shadow-sm);
+            transform: translateY(-2px);
+        }
+
+        .menu-card.selected {
+            background: linear-gradient(135deg, rgba(0, 102, 255, 0.1), rgba(0, 102, 255, 0.05));
+            border-color: var(--accent);
+        }
+
+        .menu-card .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .menu-card.selected .checkbox {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .menu-card .name {
+            flex: 1;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .menu-card .price {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .menu-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .cost-summary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px 24px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .cost-item {
+            text-align: center;
+        }
+
+        .cost-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+
+        .cost-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        /* Kitchen Notes */
+        .kitchen-notes {
+            margin-top: 20px;
+        }
+
+        .kitchen-notes textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            resize: vertical;
+            transition: all 0.2s ease;
+        }
+
+        .kitchen-notes textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+        }
+
+        /* ========== FRUIT TABLE ========== */
+        .table-wrapper {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th,
+        td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--glass-bg);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--glass-bg);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        table input {
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            font-family: inherit;
+            color: var(--text-primary);
+            padding: 4px;
+            width: 100%;
+        }
+
+        table input:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: -2px;
+            border-radius: 4px;
+        }
+
+        table input.price-input {
+            text-align: right;
+            width: 80px;
+        }
+
+        .winner-cell {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.08)) !important;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        .winner-badge {
+            display: inline-block;
+            font-size: 10px;
+            background: var(--success);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+        }
+
+        /* ========== MODAL ========== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-xl);
+            padding: 32px;
+            width: 520px;
+            max-width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-overlay.open .modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .modal-body {
+            margin-bottom: 24px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* ========== VIEWS ========== */
+        .view {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ========== TOAST ========== */
+        #toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1a202c;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 100px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 2000;
+        }
+
+        body.dark-mode #toast {
+            background: #f1f5f9;
+            color: #1a202c;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ========== PRINT STYLES ========== */
+        #print-overlay {
+            position: fixed;
+            inset: 0;
+            background: white;
+            z-index: 10000;
+            display: none;
+            overflow: auto;
+            padding: 40px;
+        }
+
+        #print-overlay.active {
+            display: block;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #print-overlay,
+            #print-overlay * {
+                visibility: visible;
+            }
+
+            #print-overlay {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 0;
+            }
+
+            @page {
+                size: A4;
+                margin: 10mm;
+            }
+        }
+
+        .print-page {
+            background: white;
+            color: black;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20mm;
+        }
+
+        .print-title {
+            font-family: Georgia, serif;
+            font-size: 36px;
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: normal;
+        }
+
+        .print-subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .print-section {
+            break-inside: avoid;
+            margin-bottom: 24px;
+        }
+
+        .print-section-title {
+            font-family: Georgia, serif;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .print-item {
+            font-size: 14px;
+            padding: 6px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .print-highlight {
+            background: #fff3cd;
+            padding: 12px;
+            border-left: 4px solid #ffc107;
+            margin: 16px 0;
+            font-weight: 600;
+        }
+
+        .print-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .print-table th,
+        .print-table td {
+            border: 1px solid #333;
+            padding: 10px 14px;
+            text-align: left;
+        }
+
+        .print-table th {
+            background: #f5f5f5;
+            font-weight: bold;
+        }
+
+        /* ========== v7.0: LOGIN SCREEN ========== */
+        #login-screen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        #login-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(30px);
+            border-radius: 24px;
+            padding: 48px 40px;
+            width: 420px;
+            max-width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+
+        .login-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .login-header .version {
+            font-size: 14px;
+            color: #718096;
+            font-weight: 600;
+        }
+
+        .login-input-group {
+            margin-bottom: 20px;
+        }
+
+        .login-input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-error {
+            background: #fee;
+            color: #c00;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .login-error.show {
+            display: block;
+            animation: shake 0.4s;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-10px);
+            }
+
+            75% {
+                transform: translateX(10px);
+            }
+        }
+
+        /* User Avatar in Header */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: var(--radius-lg);
+        }
+
+        body.dark-mode .user-info {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-role {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .logout-btn {
+            padding: 6px 12px;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            background: var(--danger);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ========== v7.0: LOGIN SCREEN ========== -->
+    <div id="login-screen">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>🍽️ Banquet Master</h1>
+                <p class="version">v7.0 Enterprise Edition</p>
+            </div>
+
+            <div class="login-error" id="login-error">用户名或密码错误</div>
+
+            <div class="login-input-group">
+                <label>用户名</label>
+                <input type="text" class="login-input" id="login-username" placeholder="输入用户名" autocomplete="username">
+            </div>
+
+            <div class="login-input-group">
+                <label>密码</label>
+                <input type="password" class="login-input" id="login-password" placeholder="输入密码"
+                    autocomplete="current-password">
+            </div>
+
+            <button class="login-btn" onclick="app.login()">登录</button>
+
+            <div
+                style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; color: #a0aec0; font-size: 12px;">
+                <p>默认管理员账号: <strong>admin</strong> / <strong>admin123</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="app">
+        <!-- ========== SIDEBAR ========== -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <span>🍽️ Banquet Master</span>
+                    <span class="brand-badge">v7.0</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-group">
+                    <div class="nav-group-title">Dashboard</div>
+                    <div class="nav-item active" data-view="dashboard">
+                        <i>📊</i>
+                        <span>智能仪表盘</span>
+                    </div>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-group-title">Workspace</div>
+                    <div class="nav-item" data-view="menu">
+                        <i>🍽️</i>
+                        <span>宴请拟单</span>
+                    </div>
+                    <div class="nav-item" data-view="fruit">
+                        <i>🍎</i>
+                        <span>水果采购</span>
+                    </div>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-group-title">System</div>
+                    <div class="nav-item" data-view="settings">
+                        <i>⚙️</i>
+                        <span>系统设置</span>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="cloud-status-panel">
+                <div class="cloud-status">
+                    <span class="status-dot online" id="status-dot"></span>
+                    <span id="status-text">云端同步正常</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;">
+                    <button class="btn btn-sm"
+                        style="font-size: 11px; padding: 6px 10px; background: rgba(255,255,255,0.1); color: white; border: none;"
+                        onclick="app.cloudUpload()">
+                        ☁️ 上传
+                    </button>
+                    <button class="btn btn-sm"
+                        style="font-size: 11px; padding: 6px 10px; background: rgba(255,255,255,0.1); color: white; border: none;"
+                        onclick="app.cloudDownload()">
+                        📥 拉取
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ========== MAIN ========== -->
+        <main class="main">
+            <header class="header">
+                <h1 id="view-title">智能仪表盘</h1>
+                <div class="header-actions">
+                    <button class="theme-toggle" id="theme-toggle" title="切换深色模式">
+                        🌙
+                    </button>
+                    <div id="header-action-buttons"></div>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- ========== VIEW: DASHBOARD ========== -->
+                <section id="view-dashboard" class="view active">
+                    <!-- Calendar -->
+                    <div class="calendar">
+                        <div class="calendar-header">
+                            <div class="calendar-nav">
+                                <button onclick="app.prevMonth()">←</button>
+                                <button onclick="app.nextMonth()">→</button>
+                            </div>
+                            <div class="calendar-title" id="calendar-title">2026年1月</div>
+                            <button class="btn btn-primary btn-sm" onclick="app.newSession()">
+                                ＋ 新建菜单
+                            </button>
+                        </div>
+                        <div class="calendar-grid" id="calendar-grid">
+                            <!-- Weekday headers will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Stats -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">本月接待场次</div>
+                            <div class="stat-value" id="stat-count">0</div>
+                            <div class="stat-trend">场次</div>
+                            <div class="sparkline"></div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-label">本月水果支出</div>
+                            <div class="stat-value" id="stat-budget">¥0</div>
+                            <div class="stat-trend">预估</div>
+                            <div class="sparkline"></div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-label">最常接待部门</div>
+                            <div class="stat-value" id="stat-dept">—</div>
+                            <div class="stat-trend">Top Dept</div>
+                            <div class="sparkline"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========== VIEW: MENU ========== -->
+                <section id="view-menu" class="view">
+                    <!-- Session Info -->
+                    <div class="card">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>日期</label>
+                                <input type="date" class="form-input" id="inp-date">
+                            </div>
+                            <div class="form-group">
+                                <label>部门</label>
+                                <input type="text" class="form-input" id="inp-dept" placeholder="销售部">
+                            </div>
+                            <div class="form-group">
+                                <label>包厢</label>
+                                <input type="text" class="form-input" id="inp-room" placeholder="V888">
+                            </div>
+                            <div class="form-group">
+                                <label>桌数</label>
+                                <input type="number" class="form-input" id="inp-tables" value="1" min="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Menu Sections -->
+                    <div class="card">
+                        <div id="menu-renderer"></div>
+
+                        <!-- Kitchen Notes -->
+                        <div class="kitchen-notes">
+                            <label
+                                style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase;">
+                                🏷️ 厨房备注 (Kitchen Notes)
+                            </label>
+                            <textarea id="kitchen-notes" placeholder="例：无香菜、少盐、不要辣椒..."></textarea>
+                        </div>
+
+                        <!-- Cost Summary -->
+                        <div class="cost-summary">
+                            <div class="cost-item">
+                                <div class="cost-label">单桌成本</div>
+                                <div class="cost-value" id="cost-per-table">¥0</div>
+                            </div>
+                            <div class="cost-item">
+                                <div class="cost-label">总预算</div>
+                                <div class="cost-value" id="cost-total">¥0</div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="menu-actions">
+                            <button class="btn btn-secondary" onclick="app.saveTemplate()">
+                                💾 存为模板
+                            </button>
+                            <button class="btn btn-secondary" onclick="app.loadTemplate()">
+                                ⚡ 加载模板
+                            </button>
+                            <button class="btn btn-secondary" onclick="app.archiveCurrent()">
+                                📥 归档
+                            </button>
+                            <button class="btn btn-primary" onclick="app.printMenu()">
+                                🖨️ 打印菜单
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========== VIEW: FRUIT ========== -->
+                <section id="view-fruit" class="view">
+                    <div class="card">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div style="color: var(--text-secondary);">
+                                <strong>预计人数:</strong> <span id="fruit-guests">10</span> 人
+                                <span style="margin-left: 20px; color: var(--success);">■</span> 绿色 = 最低价
+                            </div>
+                            <button class="btn btn-primary btn-sm" onclick="app.exportCSV()">
+                                📥 导出 Excel
+                            </button>
+                        </div>
+
+                        <div class="table-wrapper">
+                            <table id="fruit-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 20%">水果名称</th>
+                                        <th style="width: 12%">人均(kg)</th>
+                                        <th style="width: 12%">总需(kg)</th>
+                                        <th style="width: 14%" contenteditable="true" id="sup-0">供应商 A</th>
+                                        <th style="width: 14%" contenteditable="true" id="sup-1">供应商 B</th>
+                                        <th style="width: 14%" contenteditable="true" id="sup-2">供应商 C</th>
+                                        <th style="width: 14%">推荐采购</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="fruit-tbody">
+                                    <!-- Rows will be inserted by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========== VIEW: SETTINGS ========== -->
+                <section id="view-settings" class="view">
+                    <div class="card">
+                        <h3 style="margin-bottom: 20px; font-size: 20px;">⚙️ 系统设置</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 28px;">
+                            数据将自动同步至云端 (JSONBin)，无需手动配置。
+                        </p>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <button class="btn btn-secondary" onclick="app.exportJSON()">
+                                📥 导出本地备份
+                            </button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('file-import').click()">
+                                📤 导入备份
+                            </button>
+                            <input type="file" id="file-import" accept=".json" style="display: none"
+                                onchange="app.importJSON(this)">
+                            <button class="btn btn-danger" onclick="app.factoryReset()">
+                                ⚠️ 恢复出厂
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- ========== MODALS ========== -->
+    <div class="modal-overlay" id="modal-detail">
+        <div class="modal">
+            <div class="modal-title" id="modal-detail-title">详情</div>
+            <div class="modal-body" id="modal-detail-body"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="app.closeModal('detail')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-template">
+        <div class="modal">
+            <div class="modal-title">⚡ 选择模板</div>
+            <div class="modal-body" id="modal-template-body"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="app.closeModal('template')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== TOAST ========== -->
+    <div id="toast"></div>
+
+    <!-- ========== PRINT OVERLAY ========== -->
+    <div id="print-overlay"></div>
+
+    <script>
+        /**
+         * ========================================
+         * BANQUET MASTER v6.0 - GOD-TIER EDITION
+         * Part 2/3: Core JavaScript Logic
+         * ========================================
+         */
+
+        // ============ HARDCODED CLOUD CREDENTIALS ============
+        const CLOUD_BIN_ID = "697b6c5443b1c97be954f846";
+        const CLOUD_API_KEY = "$2a$10$cA6TzyLcckcETsA.S3eg3./henvOAFblip2JDFSPC8LXWT.cKkx5q";
+        const API_URL = `https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}`;
+
+        // ============ UTILITIES ============
+        const U = {
+            id: () => Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+            round: (n) => Math.round(n * 100) / 100,
+            minIdx: (arr) => {
+                let min = Infinity, idx = -1;
+                arr.forEach((v, i) => {
+                    const n = parseFloat(v) || 0;
+                    if (n > 0 && n < min) { min = n; idx = i; }
+                });
+                return idx;
+            }
+        };
+
+        // ============ DEFAULT DATA ============
+        const DEFAULTS = {
+            session: {
+                date: new Date().toISOString().split('T')[0],
+                dept: '',
+                room: '',
+                tables: 1,
+                guests: 10,
+                kitchenNotes: ''
+            },
+            categories: [
+                { id: 'c1', name: '冷菜 Cold Dishes' },
+                { id: 'c2', name: '热菜 Hot Dishes' },
+                { id: 'c3', name: '汤羹 Soup' },
+                { id: 'c4', name: '主食 Staple' },
+                { id: 'c5', name: '酒水 Drinks' }
+            ],
+            items: [
+                { id: 'i1', cid: 'c1', name: '拍黄瓜', price: 18 },
+                { id: 'i2', cid: 'c1', name: '老醋花生', price: 22 },
+                { id: 'i3', cid: 'c1', name: '蒜泥白肉', price: 38 },
+                { id: 'i4', cid: 'c2', name: '宫保鸡丁', price: 45 },
+                { id: 'i5', cid: 'c2', name: '红烧肉', price: 68 },
+                { id: 'i6', cid: 'c2', name: '水煮鱼', price: 88 },
+                { id: 'i7', cid: 'c3', name: '西湖牛肉羹', price: 32 },
+                { id: 'i8', cid: 'c3', name: '紫菜蛋花汤', price: 15 },
+                { id: 'i9', cid: 'c4', name: '扬州炒饭', price: 25 },
+                { id: 'i10', cid: 'c4', name: '小笼包', price: 28 },
+                { id: 'i11', cid: 'c5', name: '可乐', price: 8 },
+                { id: 'i12', cid: 'c5', name: '雪花啤酒', price: 12 }
+            ],
+            selectedIds: [],
+            fruit: [
+                { id: 'f1', name: '富士苹果', perCapita: 0.2, prices: [8.5, 9.0, 8.8], history: [] },
+                { id: 'f2', name: '香蕉', perCapita: 0.3, prices: [6.0, 5.8, 6.2], history: [] },
+                { id: 'f3', name: '西瓜', perCapita: 0.5, prices: [4.5, 4.8, 4.2], history: [] }
+            ],
+            supplierNames: ['供应商 A', '供应商 B', '供应商 C'],
+            templates: [],
+            archives: [],
+            calendarMonth: new Date().getMonth(),
+            calendarYear: new Date().getFullYear(),
+            darkMode: false,
+            // v7.0 Enterprise Features
+            version: '7.0',
+            users: [
+                {
+                    id: 'admin_001',
+                    username: 'admin',
+                    passwordHash: '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', // SHA256('admin123')
+                    role: 'admin', // admin | manager | user
+                    name: '系统管理员',
+                    email: 'admin@company.com',
+                    createdAt: new Date().toISOString()
+                }
+            ],
+            currentUser: null
+        };
+
+        // ============ APPLICATION ============
+        const app = {
+            data: null,
+            view: 'dashboard',
+            focusedCell: null,
+            syncTimeout: null,
+            syncInProgress: false,
+
+            async init() {
+                this.load();
+
+                // v7.0: Check authentication before initializing app
+                if (!this.checkAuth()) {
+                    this.showLoginScreen();
+                    return;
+                }
+
+                this.hideLoginScreen();
+                this.showUserInfo();
+                this.setupNav();
+                this.setupInputSync();
+                this.setupThemeToggle();
+                this.setupKeyboardNav();
+                this.setupOptimisticSync();
+                this.setupLoginHandlers();
+                this.render();
+                await this.cloudDownload(true);
+            },
+
+            load() {
+                // v7.0: Changed key from bm_v6 to bm_v7
+                const raw = localStorage.getItem('bm_v7');
+                if (raw) {
+                    try {
+                        this.data = JSON.parse(raw);
+                        if (!Array.isArray(this.data.categories)) throw new Error();
+                    } catch {
+                        this.data = JSON.parse(JSON.stringify(DEFAULTS));
+                    }
+                } else {
+                    // Try to migrate from v6 
+                    const v6Raw = localStorage.getItem('bm_v6');
+                    if (v6Raw) {
+                        try {
+                            const v6Data = JSON.parse(v6Raw);
+                            this.data = { ...JSON.parse(JSON.stringify(DEFAULTS)), ...v6Data };
+                            this.data.version = '7.0';
+                            this.save();
+                        } catch {
+                            this.data = JSON.parse(JSON.stringify(DEFAULTS));
+                        }
+                    } else {
+                        this.data = JSON.parse(JSON.stringify(DEFAULTS));
+                    }
+                }
+
+                // Ensure all fields exist
+                if (!this.data.templates) this.data.templates = [];
+                if (!this.data.session.tables) this.data.session.tables = 1;
+                if (!this.data.session.guests) this.data.session.guests = 10;
+                if (!this.data.session.kitchenNotes) this.data.session.kitchenNotes = '';
+                if (this.data.darkMode === undefined) this.data.darkMode = false;
+
+                // v7.0: Ensure user system exists
+                if (!this.data.version) this.data.version = '7.0';
+                if (!this.data.users) this.data.users = DEFAULTS.users;
+                if (this.data.currentUser === undefined) this.data.currentUser = null;
+
+                // Apply dark mode
+                if (this.data.darkMode) {
+                    document.body.classList.add('dark-mode');
+                }
+            },
+
+            save() {
+                localStorage.setItem('bm_v7', JSON.stringify(this.data));
+                // Optimistic UI: Save locally first, then sync to cloud
+                this.debouncedCloudSync();
+            },
+
+            // ============ OPTIMISTIC UI SYNC ============
+            setupOptimisticSync() {
+                // Auto-sync every 5 minutes if there are changes
+                setInterval(() => {
+                    if (!this.syncInProgress) {
+                        this.cloudUpload(true); // silent auto-sync
+                    }
+                }, 5 * 60 * 1000);
+            },
+
+            debouncedCloudSync() {
+                // Clear existing timeout
+                if (this.syncTimeout) {
+                    clearTimeout(this.syncTimeout);
+                }
+
+                // Set new timeout - batch multiple saves into one sync
+                this.syncTimeout = setTimeout(() => {
+                    if (!this.syncInProgress) {
+                        this.cloudUpload(true); // silent background sync
+                    }
+                }, 2000); // 2 second debounce
+            },
+
+            // ============ v7.0: AUTHENTICATION SYSTEM ============
+            hashPassword(password) {
+                // Use CryptoJS SHA256 for password hashing
+                return CryptoJS.SHA256(password).toString();
+            },
+
+            checkAuth() {
+                // Check if user is logged in
+                return this.data.currentUser !== null;
+            },
+
+            login() {
+                const username = document.getElementById('login-username').value.trim();
+                const password = document.getElementById('login-password').value;
+                const errorEl = document.getElementById('login-error');
+
+                if (!username || !password) {
+                    errorEl.textContent = '请输入用户名和密码';
+                    errorEl.classList.add('show');
+                    setTimeout(() => errorEl.classList.remove('show'), 3000);
+                    return;
+                }
+
+                // Find user
+                const user = this.data.users.find(u => u.username === username);
+                if (!user) {
+                    errorEl.textContent = '用户名不存在';
+                    errorEl.classList.add('show');
+                    setTimeout(() => errorEl.classList.remove('show'), 3000);
+                    return;
+                }
+
+                // Verify password
+                const passwordHash = this.hashPassword(password);
+                if (user.passwordHash !== passwordHash) {
+                    errorEl.textContent = '密码错误';
+                    errorEl.classList.add('show');
+                    setTimeout(() => errorEl.classList.remove('show'), 3000);
+                    return;
+                }
+
+                // Login successful
+                this.data.currentUser = {
+                    id: user.id,
+                    username: user.username,
+                    role: user.role,
+                    name: user.name,
+                    email: user.email
+                };
+                this.save();
+
+                // Hide login screen and show app
+                this.hideLoginScreen();
+                this.showUserInfo();
+
+                // Initialize app components
+                this.setupNav();
+                this.setupInputSync();
+                this.setupThemeToggle();
+                this.setupKeyboardNav();
+                this.setupOptimisticSync();
+                this.render();
+                this.cloudDownload(true);
+
+                this.toast(`🎉 欢迎回来，${user.name}！`);
+            },
+
+            logout() {
+                if (!confirm('确定要退出登录吗？')) return;
+
+                this.data.currentUser = null;
+                this.save();
+
+                // Show login screen
+                this.showLoginScreen();
+                this.toast('已安全退出登录');
+
+                // Clear user info from header
+                const userInfoEl = document.getElementById('user-info-container');
+                if (userInfoEl) userInfoEl.innerHTML = '';
+            },
+
+            showLoginScreen() {
+                const loginScreen = document.getElementById('login-screen');
+                const app = document.getElementById('app');
+
+                loginScreen.classList.remove('hidden');
+                if (app) app.style.display = 'none';
+
+                // Clear input fields
+                document.getElementById('login-username').value = '';
+                document.getElementById('login-password').value = '';
+                document.getElementById('login-error').classList.remove('show');
+            },
+
+            hideLoginScreen() {
+                const loginScreen = document.getElementById('login-screen');
+                const app = document.getElementById('app');
+
+                loginScreen.classList.add('hidden');
+                if (app) app.style.display = 'grid';
+            },
+
+            showUserInfo() {
+                const user = this.data.currentUser;
+                if (!user) return;
+
+                // Find or create user info container in header
+                let container = document.getElementById('user-info-container');
+                if (!container) {
+                    // Insert before theme toggle
+                    const headerActions = document.querySelector('.header-actions');
+                    container = document.createElement('div');
+                    container.id = 'user-info-container';
+                    headerActions.insertBefore(container, headerActions.firstChild);
+                }
+
+                // Get initials for avatar
+                const initials = user.name.substring(0, 2).toUpperCase();
+                const roleLabel = {
+                    'admin': '管理员',
+                    'manager': '经理',
+                    'user': '用户'
+                }[user.role] || '用户';
+
+                container.innerHTML = `
+                    <div class="user-info">
+                        <div class="user-avatar">${initials}</div>
+                        <div class="user-details">
+                            <div class="user-name">${user.name}</div>
+                            <div class="user-role">${roleLabel}</div>
+                        </div>
+                        <button class="logout-btn" onclick="app.logout()">退出</button>
+                    </div>
+                `;
+            },
+
+            setupLoginHandlers() {
+                // Allow Enter key to submit login
+                const passwordInput = document.getElementById('login-password');
+                if (passwordInput && !passwordInput.dataset.handlerBound) {
+                    passwordInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            this.login();
+                        }
+                    });
+                    passwordInput.dataset.handlerBound = 'true';
+                }
+
+                const usernameInput = document.getElementById('login-username');
+                if (usernameInput && !usernameInput.dataset.handlerBound) {
+                    usernameInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            document.getElementById('login-password').focus();
+                        }
+                    });
+                    usernameInput.dataset.handlerBound = 'true';
+                }
+            },
+
+            // ============ THEME ============
+            setupThemeToggle() {
+                document.getElementById('theme-toggle').onclick = () => {
+                    this.data.darkMode = !this.data.darkMode;
+                    document.body.classList.toggle('dark-mode');
+                    document.getElementById('theme-toggle').textContent = this.data.darkMode ? '☀️' : '🌙';
+                    this.save();
+                    this.toast(this.data.darkMode ? '🌙 深色模式' : '☀️ 浅色模式');
+                };
+                // Set initial icon
+                document.getElementById('theme-toggle').textContent = this.data.darkMode ? '☀️' : '🌙';
+            },
+
+            // ============ NAVIGATION ============
+            setupNav() {
+                document.querySelectorAll('.nav-item[data-view]').forEach(el => {
+                    el.onclick = () => this.nav(el.dataset.view);
+                });
+            },
+
+            nav(view) {
+                this.view = view;
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                document.querySelector(`.nav-item[data-view="${view}"]`)?.classList.add('active');
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                document.getElementById(`view-${view}`)?.classList.add('active');
+
+                const titles = {
+                    dashboard: '智能仪表盘',
+                    menu: '宴请拟单',
+                    fruit: '水果采购',
+                    settings: '系统设置'
+                };
+                document.getElementById('view-title').textContent = titles[view] || view;
+
+                this.render();
+            },
+
+            // ============ INPUT SYNC ============
+            setupInputSync() {
+                ['inp-date', 'inp-dept', 'inp-room', 'inp-tables'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.oninput = (e) => {
+                            const key = id.replace('inp-', '');
+                            this.data.session[key] = key === 'tables' ? parseInt(e.target.value) || 1 : e.target.value;
+                            this.save();
+                            this.updateCostSummary();
+                        };
+                    }
+                });
+
+                const notesEl = document.getElementById('kitchen-notes');
+                if (notesEl) {
+                    notesEl.oninput = (e) => {
+                        this.data.session.kitchenNotes = e.target.value;
+                        this.save();
+                    };
+                }
+
+                // Supplier name editing
+                ['sup-0', 'sup-1', 'sup-2'].forEach((id, idx) => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.onblur = () => {
+                            this.data.supplierNames[idx] = el.textContent.trim() || `供应商 ${String.fromCharCode(65 + idx)}`;
+                            this.save();
+                            this.renderFruit();
+                        };
+                    }
+                });
+            },
+
+            // ============ CALENDAR ============
+            renderCalendar() {
+                const grid = document.getElementById('calendar-grid');
+                const title = document.getElementById('calendar-title');
+                const { calendarYear: year, calendarMonth: month } = this.data;
+
+                title.textContent = `${year}年${month + 1}月`;
+
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const startPad = firstDay.getDay();
+                const totalDays = lastDay.getDate();
+                const today = new Date().toISOString().split('T')[0];
+
+                // Archive map
+                const archiveMap = {};
+                this.data.archives.forEach(a => {
+                    const d = a.session?.date;
+                    if (d) {
+                        if (!archiveMap[d]) archiveMap[d] = [];
+                        archiveMap[d].push(a.session.dept || '未命名');
+                    }
+                });
+
+                let html = ['日', '一', '二', '三', '四', '五', '六']
+                    .map(d => `<div class="calendar-weekday">${d}</div>`)
+                    .join('');
+
+                // Previous month padding
+                const prevMonth = new Date(year, month, 0);
+                for (let i = startPad - 1; i >= 0; i--) {
+                    html += `<div class="calendar-day other-month"><div class="calendar-day-number">${prevMonth.getDate() - i}</div></div>`;
+                }
+
+                // Current month
+                for (let d = 1; d <= totalDays; d++) {
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const isToday = dateStr === today;
+                    const events = archiveMap[dateStr] || [];
+
+                    html += `
+                        <div class="calendar-day ${isToday ? 'today' : ''}" onclick="app.showDayDetail('${dateStr}')">
+                            <div class="calendar-day-number">${d}</div>
+                            ${events.slice(0, 2).map(e => `<div class="calendar-event">${e}</div>`).join('')}
+                        </div>
+                    `;
+                }
+
+                // Next month padding
+                const endPad = (7 - (startPad + totalDays) % 7) % 7;
+                for (let i = 1; i <= endPad; i++) {
+                    html += `<div class="calendar-day other-month"><div class="calendar-day-number">${i}</div></div>`;
+                }
+
+                grid.innerHTML = html;
+            },
+
+            prevMonth() {
+                this.data.calendarMonth--;
+                if (this.data.calendarMonth < 0) {
+                    this.data.calendarMonth = 11;
+                    this.data.calendarYear--;
+                }
+                this.save();
+                this.renderCalendar();
+            },
+
+            nextMonth() {
+                this.data.calendarMonth++;
+                if (this.data.calendarMonth > 11) {
+                    this.data.calendarMonth = 0;
+                    this.data.calendarYear++;
+                }
+                this.save();
+                this.renderCalendar();
+            },
+
+            showDayDetail(dateStr) {
+                const archives = this.data.archives.filter(a => a.session?.date === dateStr);
+                if (!archives.length) {
+                    this.openModal('detail', `📅 ${dateStr}`, '<p style="color:var(--text-secondary)">当日暂无归档记录</p>');
+                    return;
+                }
+
+                let html = archives.map(a => {
+                    const dishes = a.selectedIds.map(sid => a.items.find(i => i.id === sid)?.name).filter(Boolean);
+                    return `
+                        <div style="margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--border)">
+                            <div style="font-weight:600; margin-bottom:8px">${a.session.dept || '未命名'} - ${a.session.room || '未指定包厢'}</div>
+                            <div style="font-size:12px; color:var(--text-secondary)">桌数: ${a.session.tables || 1} | 菜品: ${dishes.length}道</div>
+                            <div style="margin-top:8px; font-size:13px">${dishes.join(', ') || '无已选菜品'}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                this.openModal('detail', `📅 ${dateStr}`, html);
+            },
+
+            newSession() {
+                this.data.session.date = new Date().toISOString().split('T')[0];
+                this.data.session.dept = '';
+                this.data.session.room = '';
+                this.data.selectedIds = [];
+                this.data.session.kitchenNotes = '';
+                this.save();
+                this.nav('menu');
+                this.toast('已创建今日新菜单');
+            },
+
+            // ============ DASHBOARD STATS ============
+            renderDashboard() {
+                this.renderCalendar();
+
+                const now = new Date();
+                const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+                // Filter archives for current month
+                const monthArchives = this.data.archives.filter(a => {
+                    const archiveDate = a.session?.date || '';
+                    return archiveDate.startsWith(currentMonth);
+                });
+
+                // Count
+                document.getElementById('stat-count').textContent = monthArchives.length;
+
+                // Budget (sum of fruit costs)
+                let totalBudget = 0;
+                monthArchives.forEach(a => {
+                    if (a.fruit && a.session?.guests) {
+                        a.fruit.forEach(f => {
+                            const total = U.round(f.perCapita * a.session.guests);
+                            const winIdx = U.minIdx(f.prices);
+                            if (winIdx > -1) {
+                                totalBudget += U.round(total * f.prices[winIdx]);
+                            }
+                        });
+                    }
+                });
+                document.getElementById('stat-budget').textContent = `¥${U.round(totalBudget)}`;
+
+                // Top department
+                const deptCount = {};
+                monthArchives.forEach(a => {
+                    const dept = a.session?.dept || '未命名';
+                    deptCount[dept] = (deptCount[dept] || 0) + 1;
+                });
+                let topDept = '—';
+                let maxCount = 0;
+                for (const dept in deptCount) {
+                    if (deptCount[dept] > maxCount) {
+                        maxCount = deptCount[dept];
+                        topDept = dept;
+                    }
+                }
+                document.getElementById('stat-dept').textContent = topDept;
+            },
+
+            // ============ MENU ============
+            renderMenu() {
+                document.getElementById('inp-date').value = this.data.session.date;
+                document.getElementById('inp-dept').value = this.data.session.dept;
+                document.getElementById('inp-room').value = this.data.session.room;
+                document.getElementById('inp-tables').value = this.data.session.tables;
+                document.getElementById('kitchen-notes').value = this.data.session.kitchenNotes || '';
+
+                const container = document.getElementById('menu-renderer');
+                container.innerHTML = '';
+
+                this.data.categories.forEach(cat => {
+                    const section = document.createElement('div');
+                    section.className = 'menu-section';
+
+                    const items = this.data.items.filter(i => i.cid === cat.id);
+
+                    section.innerHTML = `
+                        <div class="menu-section-header">
+                            <span class="menu-section-title">${cat.name}</span>
+                            <button class="btn btn-sm btn-secondary" onclick="app.addItem('${cat.id}')">+ 添加</button>
+                        </div>
+                        <div class="menu-grid" data-cid="${cat.id}"></div>
+                    `;
+
+                    const grid = section.querySelector('.menu-grid');
+
+                    items.forEach(item => {
+                        const isSel = this.data.selectedIds.includes(item.id);
+                        const card = document.createElement('div');
+                        card.className = `menu-card ${isSel ? 'selected' : ''}`;
+                        card.dataset.id = item.id;
+                        card.innerHTML = `
+                            <div class="checkbox">${isSel ? '✓' : ''}</div>
+                            <span class="name">${item.name}</span>
+                            <span class="price">¥${item.price || 0}</span>
+                        `;
+                        card.onclick = () => this.toggleSelect(item.id);
+                        grid.appendChild(card);
+                    });
+
+                    container.appendChild(section);
+                });
+
+                this.updateCostSummary();
+            },
+
+            toggleSelect(id) {
+                const idx = this.data.selectedIds.indexOf(id);
+                if (idx > -1) this.data.selectedIds.splice(idx, 1);
+                else this.data.selectedIds.push(id);
+                this.save();
+                this.renderMenu();
+            },
+
+            addItem(cid) {
+                const name = prompt('输入新菜品名称:');
+                if (name?.trim()) {
+                    const price = parseFloat(prompt('输入估算单价 (¥):', '30') || 30);
+                    this.data.items.push({
+                        id: U.id(),
+                        cid,
+                        name: name.trim(),
+                        price: U.round(price)
+                    });
+                    this.save();
+                    this.renderMenu();
+                }
+            },
+
+            updateCostSummary() {
+                let totalCost = 0;
+                this.data.selectedIds.forEach(sid => {
+                    const item = this.data.items.find(i => i.id === sid);
+                    if (item) totalCost += (item.price || 0);
+                });
+
+                const tables = this.data.session.tables || 1;
+                document.getElementById('cost-per-table').textContent = `¥${U.round(totalCost)}`;
+                document.getElementById('cost-total').textContent = `¥${U.round(totalCost * tables)}`;
+            },
+
+            // ============ TEMPLATE SYSTEM ============
+            saveTemplate() {
+                const name = prompt('模板名称:', `套餐-${new Date().toLocaleDateString()}`);
+                if (!name?.trim()) return;
+
+                this.data.templates.push({
+                    id: U.id(),
+                    name: name.trim(),
+                    selectedIds: [...this.data.selectedIds],
+                    createdAt: new Date().toISOString()
+                });
+                this.save();
+                this.toast('✅ 模板已保存');
+            },
+
+            loadTemplate() {
+                if (!this.data.templates.length) {
+                    this.toast('⚠️ 暂无模板');
+                    return;
+                }
+
+                let html = this.data.templates.map(t => `
+                    <div style="padding:12px; border:1px solid var(--border); border-radius:8px; margin-bottom:10px; cursor:pointer; transition:all 0.2s;"
+                         onmouseover="this.style.borderColor='var(--accent)'"
+                         onmouseout="this.style.borderColor='var(--border)'"
+                         onclick="app.applyTemplate('${t.id}')">
+                        <div style="font-weight:600; margin-bottom:4px">${t.name}</div>
+                        <div style="font-size:12px; color:var(--text-secondary)">${t.selectedIds.length} 道菜品</div>
+                    </div>
+                `).join('');
+
+                this.openModal('template', '⚡ 选择模板', html);
+            },
+
+            applyTemplate(tid) {
+                const template = this.data.templates.find(t => t.id === tid);
+                if (!template) return;
+
+                this.data.selectedIds = [...template.selectedIds];
+                this.save();
+                this.closeModal('template');
+                this.renderMenu();
+                this.toast(`✅ 已加载模板: ${template.name}`);
+            },
+
+            // ============ ARCHIVE ============
+            archiveCurrent() {
+                const snapshot = {
+                    id: U.id(),
+                    timestamp: new Date().toISOString(),
+                    session: { ...this.data.session },
+                    selectedIds: [...this.data.selectedIds],
+                    items: JSON.parse(JSON.stringify(this.data.items)),
+                    fruit: JSON.parse(JSON.stringify(this.data.fruit))
+                };
+                this.data.archives.unshift(snapshot);
+                this.save();
+                this.toast('✅ 已归档到历史记录');
+                this.renderCalendar();
+            },
+
+            // ============ FRUIT TABLE ============
+            renderFruit() {
+                const guests = this.data.session.guests || 10;
+                document.getElementById('fruit-guests').textContent = guests;
+
+                const tbody = document.getElementById('fruit-tbody');
+                tbody.innerHTML = '';
+
+                const all = [...this.data.fruit, { id: '__new__', name: '', perCapita: 0.1, prices: [0, 0, 0] }];
+
+                all.forEach((f, idx) => {
+                    const isNew = f.id === '__new__';
+                    const total = isNew ? 0 : U.round(f.perCapita * guests);
+                    const winIdx = U.minIdx(f.prices);
+                    const winPrice = winIdx > -1 ? f.prices[winIdx] : 0;
+                    const winName = winIdx > -1 ? this.data.supplierNames[winIdx] : '—';
+
+                    const tr = document.createElement('tr');
+                    tr.dataset.row = idx;
+
+                    tr.innerHTML = `
+                        <td><input type="text" value="${f.name}" placeholder="+ 新增水果" data-field="name" data-row="${idx}"></td>
+                        <td><input type="number" step="0.1" value="${isNew ? '' : f.perCapita}" data-field="perCapita" data-row="${idx}" data-col="1"></td>
+                        <td style="font-weight:600">${isNew ? '—' : total}</td>
+                        ${f.prices.map((p, i) => `
+                            <td class="${i === winIdx && !isNew ? 'winner-cell' : ''}">
+                                <input type="number" class="price-input" step="0.1" value="${p || ''}" data-field="price" data-idx="${i}" data-row="${idx}" data-col="${i + 2}">
+                                ${i === winIdx && !isNew ? '<span class="winner-badge">WIN</span>' : ''}
+                            </td>
+                        `).join('')}
+                        <td style="font-weight:600; color:var(--accent)">${isNew ? '—' : (winIdx > -1 ? `${winName} (¥${winPrice})` : '待输入')}</td>
+                    `;
+
+                    tr.querySelectorAll('input').forEach(inp => {
+                        inp.oninput = () => this.handleFruitInput(inp);
+                        inp.onfocus = () => {
+                            this.focusedCell = { row: parseInt(inp.dataset.row), col: parseInt(inp.dataset.col) };
+                        };
+                    });
+
+                    tbody.appendChild(tr);
+                });
+            },
+
+            handleFruitInput(inp) {
+                const rowIdx = parseInt(inp.dataset.row);
+                const field = inp.dataset.field;
+                const val = inp.value.trim();
+
+                if (rowIdx === this.data.fruit.length) {
+                    // New row
+                    if (field === 'name' && val) {
+                        this.data.fruit.push({
+                            id: U.id(),
+                            name: val,
+                            perCapita: 0.1,
+                            prices: [0, 0, 0],
+                            history: []
+                        });
+                        this.save();
+                        this.renderFruit();
+                    }
+                    return;
+                }
+
+                const fruit = this.data.fruit[rowIdx];
+                if (!fruit) return;
+
+                if (field === 'name') {
+                    fruit.name = val;
+                } else if (field === 'perCapita') {
+                    fruit.perCapita = parseFloat(val) || 0;
+                } else if (field === 'price') {
+                    const priceIdx = parseInt(inp.dataset.idx);
+                    const newPrice = parseFloat(val) || 0;
+                    fruit.prices[priceIdx] = newPrice;
+
+                    // Save to history
+                    if (newPrice > 0) {
+                        if (!fruit.history) fruit.history = [];
+                        fruit.history.push({
+                            supplier: this.data.supplierNames[priceIdx],
+                            price: newPrice,
+                            date: new Date().toISOString()
+                        });
+                    }
+                }
+
+                this.save();
+                this.renderFruit();
+            },
+
+            // ============ KEYBOARD NAVIGATION ============
+            setupKeyboardNav() {
+                document.addEventListener('keydown', (e) => {
+                    if (this.view !== 'fruit' || !this.focusedCell) return;
+                    if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) return;
+
+                    e.preventDefault();
+
+                    let { row, col } = this.focusedCell;
+                    const maxRow = this.data.fruit.length; // including new row
+                    const maxCol = 4; // perCapita + 3 suppliers
+
+                    if (e.key === 'ArrowUp') row = Math.max(0, row - 1);
+                    else if (e.key === 'ArrowDown') row = Math.min(maxRow, row + 1);
+                    else if (e.key === 'ArrowLeft') col = Math.max(1, col - 1);
+                    else if (e.key === 'ArrowRight' || e.key === 'Tab') col = Math.min(maxCol, col + 1);
+
+                    const targetInput = document.querySelector(`#fruit-tbody input[data-row="${row}"][data-col="${col}"]`);
+                    if (targetInput) {
+                        targetInput.focus();
+                        targetInput.select();
+                    }
+                });
+            },
+
+            // ============ EXPORT CSV ============
+            exportCSV() {
+                const guests = this.data.session.guests || 10;
+                const BOM = '\uFEFF';
+                let csv = BOM + '品名,人均(kg),总需(kg),中标供应商,单价(¥),预算(¥)\n';
+
+                this.data.fruit.forEach(f => {
+                    const total = U.round(f.perCapita * guests);
+                    const winIdx = U.minIdx(f.prices);
+                    const winPrice = winIdx > -1 ? f.prices[winIdx] : 0;
+                    const winName = winIdx > -1 ? this.data.supplierNames[winIdx] : '待定';
+                    const budget = U.round(total * winPrice);
+                    csv += `"${f.name}",${f.perCapita},${total},"${winName}",${winPrice},${budget}\n`;
+                });
+
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `水果采购单_${this.data.session.date}.csv`;
+                a.click();
+                this.toast('✅ CSV 已导出');
+            },
+
+            // ============ PRINT ============
+            printMenu() {
+                const overlay = document.getElementById('print-overlay');
+                const s = this.data.session;
+
+                // Group dishes by category
+                const groups = {};
+                this.data.selectedIds.forEach(sid => {
+                    const item = this.data.items.find(i => i.id === sid);
+                    if (!item) return;
+                    const cat = this.data.categories.find(c => c.id === item.cid);
+                    if (!cat) return;
+                    if (!groups[cat.id]) groups[cat.id] = { name: cat.name, items: [] };
+                    groups[cat.id].items.push(item);
+                });
+
+                // Guest Copy (no prices)
+                let guestCopy = `
+                    <div class="print-page" style="page-break-after: always;">
+                        <div class="print-title">Banquet Menu - Guest Copy</div>
+                        <div class="print-subtitle">${s.date} | ${s.dept || '—'} | ${s.room || '—'} | ${s.tables || 1} 桌</div>
+                `;
+
+                for (const cid in groups) {
+                    const g = groups[cid];
+                    guestCopy += `<div class="print-section">`;
+                    guestCopy += `<div class="print-section-title">${g.name}</div>`;
+                    g.items.forEach(item => {
+                        guestCopy += `<div class="print-item"><span>${item.name}</span></div>`;
+                    });
+                    guestCopy += `</div>`;
+                }
+
+                guestCopy += `</div>`;
+
+                // Kitchen Copy (with prices and notes)
+                let kitchenCopy = `
+                    <div class="print-page">
+                        <div class="print-title">Banquet Menu - Kitchen Copy</div>
+                        <div class="print-subtitle">${s.date} | ${s.dept || '—'} | ${s.room || '—'} | ${s.tables || 1} 桌</div>
+                `;
+
+                if (s.kitchenNotes) {
+                    kitchenCopy += `<div class="print-highlight">🏷️ Kitchen Notes: ${s.kitchenNotes}</div>`;
+                }
+
+                for (const cid in groups) {
+                    const g = groups[cid];
+                    kitchenCopy += `<div class="print-section">`;
+                    kitchenCopy += `<div class="print-section-title">${g.name}</div>`;
+                    g.items.forEach(item => {
+                        kitchenCopy += `<div class="print-item"><span>${item.name}</span><span>¥${item.price || 0}</span></div>`;
+                    });
+                    kitchenCopy += `</div>`;
+                }
+
+                kitchenCopy += `</div>`;
+
+                overlay.innerHTML = guestCopy + kitchenCopy;
+                overlay.classList.add('active');
+                setTimeout(() => {
+                    window.print();
+                    overlay.classList.remove('active');
+                }, 200);
+            },
+
+            // ============ CLOUD SYNC ============
+            async cloudUpload(silent = false) {
+                if (this.syncInProgress) return; // Prevent concurrent syncs
+
+                this.syncInProgress = true;
+                this.setCloudStatus('syncing', '正在上传...');
+                try {
+                    const res = await fetch(API_URL, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Master-Key': CLOUD_API_KEY
+                        },
+                        body: JSON.stringify(this.data)
+                    });
+                    if (!res.ok) throw new Error('Upload failed');
+                    this.setCloudStatus('online', '云端同步正常');
+                    if (!silent) this.toast('✅ 云端已更新');
+                } catch (e) {
+                    console.error(e);
+                    this.setCloudStatus('offline', '离线模式');
+                    if (!silent) this.toast('❌ 上传失败');
+                } finally {
+                    this.syncInProgress = false;
+                }
+            },
+
+            async cloudDownload(silent = false) {
+                if (this.syncInProgress) return;
+
+                this.syncInProgress = true;
+                this.setCloudStatus('syncing', '正在同步...');
+                try {
+                    const res = await fetch(API_URL, {
+                        headers: { 'X-Master-Key': CLOUD_API_KEY }
+                    });
+                    if (!res.ok) throw new Error('Download failed');
+                    const json = await res.json();
+                    if (json.record && json.record.categories) {
+                        this.data = json.record;
+                        this.save();
+
+                        // Apply dark mode if needed
+                        if (this.data.darkMode) {
+                            document.body.classList.add('dark-mode');
+                            document.getElementById('theme-toggle').textContent = '☀️';
+                        }
+
+                        this.render();
+                        this.setCloudStatus('online', '云端同步正常');
+                        if (!silent) this.toast('✅ 已同步最新数据');
+                    } else {
+                        this.setCloudStatus('online', '云端同步正常');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    this.setCloudStatus('offline', '离线模式');
+                    if (!silent) this.toast('❌ 同步失败');
+                } finally {
+                    this.syncInProgress = false;
+                }
+            },
+
+            setCloudStatus(status, text) {
+                const dot = document.getElementById('status-dot');
+                const txt = document.getElementById('status-text');
+                dot.className = 'status-dot ' + status;
+                txt.textContent = text;
+            },
+
+            // ============ SETTINGS ============
+            exportJSON() {
+                const str = JSON.stringify(this.data, null, 2);
+                const url = URL.createObjectURL(new Blob([str], { type: 'application/json' }));
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `BanquetMaster_${this.data.session.date}.json`;
+                a.click();
+                this.toast('✅ 已导出备份');
+            },
+
+            importJSON(input) {
+                const file = input.files[0];
+                if (!file) return;
+                const r = new FileReader();
+                r.onload = e => {
+                    try {
+                        this.data = JSON.parse(e.target.result);
+                        this.save();
+                        location.reload();
+                    } catch {
+                        this.toast('❌ JSON 解析失败');
+                    }
+                };
+                r.readAsText(file);
+            },
+
+            factoryReset() {
+                if (confirm('⚠️ 确定恢复出厂设置？所有本地数据将被清除。')) {
+                    this.data = JSON.parse(JSON.stringify(DEFAULTS));
+                    this.save();
+                    location.reload();
+                }
+            },
+
+            // ============ UI HELPERS ============
+            toast(msg, duration = 2500) {
+                const t = document.getElementById('toast');
+                t.textContent = msg;
+                t.classList.add('show');
+                setTimeout(() => t.classList.remove('show'), duration);
+            },
+
+            openModal(type, title, body) {
+                const modal = document.getElementById(`modal-${type}`);
+                const titleEl = document.getElementById(`modal-${type}-title`);
+                const bodyEl = document.getElementById(`modal-${type}-body`);
+
+                if (titleEl) titleEl.textContent = title;
+                if (bodyEl) bodyEl.innerHTML = body;
+                modal.classList.add('open');
+            },
+
+            closeModal(type) {
+                document.getElementById(`modal-${type}`).classList.remove('open');
+            },
+
+            // ============ RENDER ============
+            render() {
+                if (this.view === 'dashboard') this.renderDashboard();
+                else if (this.view === 'menu') this.renderMenu();
+                else if (this.view === 'fruit') this.renderFruit();
+            }
+        };
+
+        // ============ BOOT ============
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+    </script>
+</body>
+
+</html>
